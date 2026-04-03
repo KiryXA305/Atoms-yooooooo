@@ -40,15 +40,24 @@ class Programm
 
     public void Simulation(RenderWindow window)
     {
-        window.MouseWheelScrolled += (sender, e) =>
+       window.MouseWheelScrolled += (sender, e) =>
         {
             float steps = e.Delta;
-            float zoomSpeed = 0.008f;
-            float delta = steps * zoomSpeed;
+            float zoomSpeed = 0.05f;
+            float power = steps * zoomSpeed;
 
-            float zoomFactor = (float)Math.Exp(delta);
+            float zoomFactor = (float)Math.Exp(power);
+
+            Vector2f oldPos = window.MapPixelToCoords(e.Position, camera.cameraView);
 
             camera.Zoom(1 / zoomFactor);
+
+            Vector2f newPos = window.MapPixelToCoords(e.Position, camera.cameraView);
+
+            Vector2f delta = oldPos - newPos;
+            delta *= 1.5f;
+
+            camera.Move(delta);
         };
 
         window.KeyPressed += (sender, e) =>
@@ -59,6 +68,22 @@ class Programm
                     Camera.Reset();
                     break;  
             }
+        };
+
+        Vector2f oldPosition = (Vector2f)Mouse.GetPosition();
+     
+        window.MouseMoved += (s, e) =>
+        {
+            if (Mouse.IsButtonPressed(Mouse.Button.Middle))
+            {
+                float power = 1f;
+
+                Vector2f delta = oldPosition - ((Vector2f)e.Position);
+
+                camera.Move(delta * power / camera.GetZoomValue());
+            }
+
+            oldPosition = ((Vector2f)e.Position);
         };
 
         /*for (int i = 0; i < 1; i++)
