@@ -36,6 +36,8 @@ static class MyMath
 
     public static float GetDistance(float x1, float x2, float y1, float y2, float z1, float z2) => MathF.Sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2));
     public static float GetDistanceSqr(float x1, float x2, float y1, float y2, float z1, float z2) => (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) + (z1 - z2) * (z1 - z2);
+
+    public static Vector3f GetDelta(float x1, float x2, float y1, float y2, float z1, float z2) => new Vector3f(x2-x1, y2-y1, z2-z1);
 }
 
 static class Parameters
