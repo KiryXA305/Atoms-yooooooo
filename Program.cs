@@ -1,13 +1,10 @@
-﻿using System.Numerics;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using Game.Utility;
 using Game.AtomPhysics;
 using CameraUtility;
 using Color = SFML.Graphics.Color;
-using System.Configuration;
-using System.Collections;
 
 namespace Simulation;
 
@@ -18,7 +15,9 @@ class Programm
     private RenderWindow window;
     private Camera camera = new Camera();
     private Atoms atoms = new Atoms();
+    public Bonds bonds = new Bonds();
     public Atoms Atoms => atoms;
+    public Bonds Bonds => bonds;
 
     public Camera Camera => camera;
     public RenderWindow Window => window;
@@ -86,14 +85,7 @@ class Programm
             oldPosition = ((Vector2f)e.Position);
         };
 
-        /*for (int i = 0; i < 1; i++)
-            {
-                List<Atom> molecule = Molecule.CreateMolecule(new Vector3f(500, 160 + i * 100, 0), Molecule.H2O);
-            }*/
-            
-            // вот ето создаёт начальные атомы, а задать границы в const
-
-            for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 10; i++)
             for (int j = 0; j < 10; j++)
             {
                 Console.WriteLine(i + ", " + j);
@@ -144,8 +136,12 @@ class Programm
             float timer = 1;
 
             for (int i = 0; i < Const.TimeSpeed; i++)
-                    atoms.Update(Const.Delta);
+            {
+                bonds.Update();
+                atoms.Update(Const.Delta);
+            }
 
+            bonds.Draw(window);
             atoms.Draw(window);
 
             averageKinetic = atoms.KineticEnergy / atoms.Count;
