@@ -83,14 +83,14 @@ class Programm
         {
             if (Mouse.IsButtonPressed(Mouse.Button.Middle))
             {
-                float power = 1f;
+                float power = 0.5f;
 
                 Vector2f delta = oldPosition - ((Vector2f)e.Position);
 
                 camera.Move(delta * power / camera.GetZoomValue());
             }
 
-            oldPosition = ((Vector2f)e.Position);
+            oldPosition = (Vector2f)e.Position;
         };
 
         for (int i = 0; i < 10; i++)
