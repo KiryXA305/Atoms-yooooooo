@@ -39,7 +39,12 @@ class Programm
 
     public void Simulation(RenderWindow window)
     {
-       window.MouseWheelScrolled += (sender, e) =>
+        window.Closed += (s, e) =>
+        {
+            window.Close();
+        };
+
+        window.MouseWheelScrolled += (sender, e) =>
         {
             float steps = e.Delta;
             float zoomSpeed = 0.05f;
