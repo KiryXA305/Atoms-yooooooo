@@ -81,8 +81,7 @@ public class Atoms
             case Atom.Hydrogen:
                 mass.Add(1);
                 radius.Add(1);
-                // color.Add(SFML.Graphics.Color.White);
-                color.Add(new Color(((byte)new Random().Next(0, 255)), ((byte)new Random().Next(0, 255)), ((byte)new Random().Next(0, 255))));
+                color.Add(SFML.Graphics.Color.White);
                 epsilion.Add(0.1f);
                 sigma.Add(3f);
                 Valence.Add(1);
@@ -110,11 +109,6 @@ public class Atoms
         }
 
         int i = Count - 1;
-
-        if (i % 2 == 1)
-        {
-            Programm.Instance.Bonds.CreateBond(i, i - 1);
-        }
 
         Programm.Instance.Window.MouseButtonPressed += (s, e) =>
         {
