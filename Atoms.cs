@@ -2,70 +2,31 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 using Game.Utility;
-
 using Color = SFML.Graphics.Color;
-using System.Windows.Forms.VisualStyles;
-using System.Numerics;
-using System.Diagnostics;
 using Simulation;
 
 namespace Game.AtomPhysics;
 
 public class Atoms
 {
-    public enum AtomVariation
+    public enum Atom
     {
         Hydrogen,
         Oxygen,
         Custom
     }
-    private const int MaxBonds = 1000;
-    private int[] bondFirst = new int[MaxBonds];
-    private int[] bondSecond = new int[MaxBonds];
-    private float[] bondDe = new float[MaxBonds];
-    private float[] bondA = new float[MaxBonds];
-    private float[] bondRe = new float[MaxBonds];
-    private float[] bondMaxDist = new float[MaxBonds];
-    private int bondCount = 0;
-
-    public void CreateBond(int first, int second)
-    {
-        if (bondCount >= MaxBonds) return;
-
-        var p = BondParametrs.GetParameters(atomVariation[first], atomVariation[second]);
-
-        bondFirst[bondCount] = first;
-        bondSecond[bondCount] = second;
-        bondDe[bondCount] = p.de;
-        bondA[bondCount] = p.a;
-        bondRe[bondCount] = p.re;
-
-        float sqrtTerm = MathF.Sqrt(1 - 0.99f);
-        bondMaxDist[bondCount] = p.re + MathF.Log(1 - sqrtTerm) / -p.a;
-
-        valence[first]--;
-        valence[second]--;
-
-        bondCount++;
-    }
-
-    private void RemoveBond(int bondIndex)
-    {
-        valence[bondFirst[bondIndex]]++;
-        valence[bondSecond[bondIndex]]++;
-
-        int last = bondCount - 1;
-        bondFirst[bondIndex] = bondFirst[last];
-        bondSecond[bondIndex] = bondSecond[last];
-        bondDe[bondIndex] = bondDe[last];
-        bondA[bondIndex] = bondA[last];
-        bondRe[bondIndex] = bondRe[last];
-        bondMaxDist[bondIndex] = bondMaxDist[last];
-
-        bondCount--;
-    }
 
     public float KineticEnergy { get; private set; }
+    public float PotentialEnergy { get; private set; }
+    public List<Atom> AtomVariation => atomVariation;
+    public List<float> X => x;
+    public List<float> Y => y;
+    public List<float> Z => z;
+    public List<float> CovalentRadius => covalentRadius;
+    public List<Color> Color => color;
+
+    public List<int> Valence = new List<int>();
+
     private Vector2f mousePosition;
     private float maxVelocity;
 
@@ -87,19 +48,17 @@ public class Atoms
     private List<float> epsilion = new List<float>();
     private List<float> sigma = new List<float>();
 
-    private List<int> valence = new List<int>();
-
     private List<Color> color = new List<Color>();
     private List<bool> isDraged = new List<bool>();
 
-    private List<AtomVariation> atomVariation = new List<AtomVariation>();
+    private List<Atom> atomVariation = new List<Atom>();
 
     public int Count
     {
         get => x.Count;
     }
 
-    public void CreateAtom(Vector3f pos, AtomVariation variation = AtomVariation.Custom)
+    public void CreateAtom(Vector3f pos, Atom variation = Atom.Custom)
     {
         x.Add(pos.X);
         y.Add(pos.Y);
@@ -119,37 +78,43 @@ public class Atoms
 
         switch (variation)
         {
-            case AtomVariation.Hydrogen:
+            case Atom.Hydrogen:
                 mass.Add(1);
                 radius.Add(1);
-                color.Add(Color.White);
+                // color.Add(SFML.Graphics.Color.White);
+                color.Add(new Color(((byte)new Random().Next(0, 255)), ((byte)new Random().Next(0, 255)), ((byte)new Random().Next(0, 255))));
                 epsilion.Add(0.1f);
                 sigma.Add(3f);
-                valence.Add(1);
+                Valence.Add(1);
                 covalentRadius.Add(0.37f);
                 break;
-            case AtomVariation.Oxygen:
+            case Atom.Oxygen:
                 mass.Add(16);
                 radius.Add(1.2f);
-                color.Add(Color.Red);
+                color.Add(SFML.Graphics.Color.Red);
                 epsilion.Add(0.16f);
                 sigma.Add(2.6f);
-                valence.Add(2);
+                Valence.Add(2);
                 covalentRadius.Add(0.73f);
                 break;
 
-            case AtomVariation.Custom:
+            case Atom.Custom:
                 mass.Add(1);
-                radius.Add(1);
-                color.Add(Color.Yellow);
-                epsilion.Add(1f);
+                radius.Add(1f);
+                color.Add(SFML.Graphics.Color.Yellow);
+                epsilion.Add(0.1f);
                 sigma.Add(3f);
-                valence.Add(1);
+                Valence.Add(1);
                 covalentRadius.Add(0.37f);
                 break;
         }
 
         int i = Count - 1;
+
+        if (i % 2 == 1)
+        {
+            Programm.Instance.Bonds.CreateBond(i, i - 1);
+        }
 
         Programm.Instance.Window.MouseButtonPressed += (s, e) =>
         {
@@ -160,7 +125,7 @@ public class Atoms
 
                 float r = dx * dx + dy * dy;
 
-                if (r < radius[i] * radius[i] * 1.3f)
+                if (r < radius[i] * radius[i])
                 {
                     isDraged[i] = true;
                 }
@@ -180,6 +145,11 @@ public class Atoms
                     vy[i] *= 0.9f;
                     vz[i] *= 0.9f;
                     break;
+                case Keyboard.Key.E:
+                    vx[i] /= 0.9f;
+                    vy[i] /= 0.9f;
+                    vz[i] /= 0.9f;
+                    break;
             }
         };
     }
@@ -188,10 +158,8 @@ public class Atoms
     public void Update(float delta)
     {
         KineticEnergy = 0;
+        PotentialEnergy = 0;
         mousePosition = Programm.Instance.Window.MapPixelToCoords(Mouse.GetPosition(Programm.Instance.Window)) * Const.Pixel2Angstrom;
-
-        UpdateBonds();
-        TryFormBonds();
 
         for (int i = 0; i < Count; i++)
         {
@@ -231,68 +199,6 @@ public class Atoms
             KineticEnergy += GetAtomKineticEnergy(i);
         }
     }
-
-    private void UpdateBonds()
-    {
-        for (int i = bondCount - 1; i >= 0; i--)
-        {
-            int f = bondFirst[i];
-            int s = bondSecond[i];
-
-            float dis = MyMath.GetDistance(x[f], x[s], y[f], y[s], z[f], z[s]);
-            float dr = dis - bondRe[i];
-
-            float exp = MathF.Exp(-bondA[i] * dr );
-            float pE = bondDe[i] * (1 - exp) * (1 - exp);
-
-            if (pE > bondDe[i]*0.9f)
-            {
-                RemoveBond(i);
-                continue;
-            }
-
-            exp = MathF.Exp(-bondA[i] * dr);
-            float force = 2 * bondDe[i] * bondA[i] * (exp * exp - exp);
-
-            float dx = x[s] - x[f];
-            float dy = y[s] - y[f];
-            float dz = z[s] - z[f];
-            Vector3f dir = new Vector3f(dx / dis, dy / dis, dz / dis);
-
-            ApplyForce(f, dir * force);
-            ApplyForce(s, dir * -force);
-        }
-    }
-
-    private void TryFormBonds()
-    {
-        for (int i = 0; i < Count; i++)
-        {
-            if (valence[i] <= 0) continue;
-
-            for (int j = i + 1; j < Count; j++)
-            {
-                if (valence[j] <= 0) continue;
-                if (HasBond(i, j)) continue;
-
-                float dis = MyMath.GetDistance(x[i], x[j], y[i], y[j], z[i], z[j]);
-                float bondThreshold = (covalentRadius[i] + covalentRadius[j]) * 1.2f;
-
-                if (dis < bondThreshold)
-                    CreateBond(i, j);
-            }
-        }
-    }
-
-    private bool HasBond(int i, int j)
-    {
-        for (int k = 0; k < bondCount; k++)
-            if ((bondFirst[k] == i && bondSecond[k] == j) ||
-                (bondFirst[k] == j && bondSecond[k] == i))
-                return true;
-        return false;
-    }
-
     public void Draw(RenderWindow window)
     {   
         float maxVX = vx.Max();
@@ -301,14 +207,11 @@ public class Atoms
 
         float newMaxVelocity = MathF.Abs(maxVX * maxVX + maxVY * maxVY + maxVZ + maxVZ);
         maxVelocity = maxVelocity * 0.999f + newMaxVelocity * 0.001f;
-
-        DrawBonds(window);
-
         for (int i = 0; i < Count; i++)
         {
             Vector2f position = new Vector2f(x[i] / Const.Pixel2Angstrom, y[i] / Const.Pixel2Angstrom);
 
-            float r = radius[i] / 2;
+            float r = radius[i] * Parameters.VisualRadiusMultiplier;
             float visualRadius = r / (Const.Pixel2Angstrom * 3) - (z[i] / Const.MaxEdgeZ) * (r / (Const.Pixel2Angstrom * 3) - 0.5f * r / (Const.Pixel2Angstrom * 3));
 
             CircleShape circle = new CircleShape(visualRadius);
@@ -318,8 +221,8 @@ public class Atoms
 
             var accelerationColor = new Color((byte)(t * 255), 0, (byte)((1 - t) * 255));
 
-            circle.FillColor = accelerationColor;
-            circle.Position = position - new Vector2f(visualRadius / 2, visualRadius / 2);
+            circle.FillColor = color[i];
+            circle.Position = position - new Vector2f(visualRadius, visualRadius);
 
             if (isDraged[i])
             {
@@ -332,25 +235,6 @@ public class Atoms
 
             window.Draw(circle);
         }
-    }
-
-    private void DrawBonds(RenderWindow window)
-    {
-        VertexArray lines = new VertexArray(PrimitiveType.Lines, (uint)(bondCount * 2));
-
-        for (int i = 0; i < bondCount; i++)
-        {
-            int f = bondFirst[i];
-            int s = bondSecond[i];
-
-            Vector2f posF = new Vector2f(x[f] / Const.Pixel2Angstrom, y[f] / Const.Pixel2Angstrom);
-            Vector2f posS = new Vector2f(x[s] / Const.Pixel2Angstrom, y[s] / Const.Pixel2Angstrom);
-
-            lines[(uint)(i * 2)] = new Vertex(posF, color[f]);
-            lines[(uint)(i * 2 + 1)] = new Vertex(posS, color[s]);
-        }
-
-        window.Draw(lines);
     }
 
     public void SoftWalls(int i)
@@ -408,7 +292,7 @@ public class Atoms
             return (coord, vel, force);
         }
 
-        float border = 1;
+        float border = 2.5f;
         float strength = 500;
 
         if (coord < min + border + radius[i])
@@ -461,11 +345,11 @@ public class Atoms
         return total_force;
     }
 
-    private void ApplyForce(int i, Vector3f force) => applyForce[i] += force;
+    public void ApplyForce(int i, Vector3f force) => applyForce[i] += force;
 
     private void LennardJonesForce(int first, int second)
     {
-        if (HasBond(first, second)) return;
+        if (Programm.Instance.Bonds.HasBond(first, second)) return;
 
         float dis = MyMath.GetDistance(x[first], x[second], y[first], y[second], z[first], z[second]);
 
@@ -489,12 +373,12 @@ public class Atoms
     private void DragForce(int i)
     {
         Vector3f delta = new Vector3f(mousePosition.X - x[i], mousePosition.Y - y[i], 0);
-        ApplyForce(i, delta * mass[i] / Const.TimeSpeed * 5f);
+        ApplyForce(i, delta * mass[i] * 5f);
     }
 
-    public void CreateHydrogen(Vector3f position) => CreateAtom(position, AtomVariation.Hydrogen);
-    public void CreateOxygen(Vector3f position) => CreateAtom(position, AtomVariation.Oxygen);
+    public void CreateHydrogen(Vector3f position) => CreateAtom(position, Atom.Hydrogen);
+    public void CreateOxygen(Vector3f position) => CreateAtom(position, Atom.Oxygen);
 
-    public void CreateCustom(Vector3f position) => CreateAtom(position, AtomVariation.Custom);
+    public void CreateCustom(Vector3f position) => CreateAtom(position, Atom.Custom);
 }
 
