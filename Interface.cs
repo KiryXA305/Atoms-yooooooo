@@ -8,15 +8,6 @@ using SFML.Window;
 
 static class UParameter
 {
-    public enum BotVisualizeMode
-    {
-        Genom,
-        Diet,
-        Energy,
-        Age,
-        SunStrength
-    }
-
     public static Font font1 = new Font(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Assets", "fonts", "font1.ttf"));
     public static bool IsPaused = false;
 
