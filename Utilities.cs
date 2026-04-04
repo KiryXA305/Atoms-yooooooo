@@ -41,4 +41,6 @@ static class MyMath
 static class Parameters
 {
     public static float VisualRadiusMultiplier = 1f;
+
+    public static bool IsPause = false;
 }

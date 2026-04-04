@@ -65,6 +65,9 @@ class Programm
             {
                 case Keyboard.Key.R:
                     Camera.Reset();
+                    break;
+                case Keyboard.Key.Space:
+                    Parameters.IsPause = !Parameters.IsPause;
                     break;  
             }
         };
@@ -114,7 +117,8 @@ class Programm
         while (window.IsOpen)
         {
             frameCount++;
-            stepCount++;
+            if (!Parameters.IsPause)
+                stepCount++;
 
             window.DispatchEvents();
             MovementCamera();
@@ -135,10 +139,13 @@ class Programm
 
             float timer = 1;
 
-            for (int i = 0; i < Const.TimeSpeed; i++)
+            if (!Parameters.IsPause)
             {
-                bonds.Update();
-                atoms.Update(Const.Delta);
+                for (int i = 0; i < Const.TimeSpeed; i++)
+                {
+                    bonds.Update();
+                    atoms.Update(Const.Delta);
+                }
             }
 
             bonds.Draw(window);
