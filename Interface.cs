@@ -11,6 +11,10 @@ static class UParameter
 {
     public static Font font1 = new Font(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Assets", "fonts", "font1.ttf"));
     public static Color OutlineMultiplier = new Color(200, 200, 200);
+    public static Color DefaultMovealbleElement = new Color(81, 143, 250);
+    public static Color DefaultTextColor = Color.White;
+    public static Color DefaultPanelColor = new Color(48, 64, 72);
+
     public static bool IsPaused = false;
 
 }
