@@ -10,8 +10,6 @@ static class Const
     public const double Joule2Ev = 6.242e18;
     public const float Pixel2Angstrom = 0.12f;
 
-
-    public static float TimeSpeed = 1f;
     public const float Delta = 0.0005f;
     public static float MinEdgeX = 00;
     public static float MinEdgeY = 00;
@@ -44,5 +42,6 @@ static class Parameters
 {
     public static float VisualRadiusMultiplier = 1f;
 
+    public static float TimeSpeed = 1f;
     public static bool IsPause = false;
 }
