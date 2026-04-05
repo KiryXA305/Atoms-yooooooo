@@ -126,7 +126,7 @@ class Programm
         {
             frameCount++;
             if (!Parameters.IsPause)
-                stepCount++;
+                stepCount += 1*Parameters.TimeSpeed;
 
             window.DispatchEvents();
             MovementCamera();
