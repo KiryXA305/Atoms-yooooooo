@@ -322,8 +322,9 @@ public class Atoms
         for (int j = i + 1; j < x.Count; j++)
         {
             float dis = MyMath.GetDistanceSqr(x[i], x[j], y[i], y[j], z[i], z[j]);
+            float sigmaij = (sigma[i] + sigma[j]) / 2;
 
-            if (dis < 4 * sigma[i] * 4 * sigma[i])
+            if (dis < 3 * sigmaij * 3 * sigmaij)
             {
                 LennardJonesForce(i, j);
             }
