@@ -182,9 +182,9 @@ public class UISlider : IUIElement
             if (IsSelected && UI.ButtonLeftPressed)
             {
                 float x = thumb.Position.X + worldPos.X - oldPosition.X;
-                x = Math.Clamp(x, track.Position.X, track.Position.X + track.Size.X);
+                x = Math.Clamp(x, track.Position.X, track.Position.X + track.Size.X - thumb.Size.X);
 
-                Value = Min + ((x - track.Position.X) / track.Size.X) * (Max - Min);
+                Value = Min + ((x - track.Position.X) / (track.Size.X-thumb.Size.X)) * (Max - Min);
                 Value = MathF.Round(Value / Step) * Step;
             }
 
@@ -203,7 +203,7 @@ public class UISlider : IUIElement
         valueText.Align(track.GetGlobalBounds());
 
         Vector2f thumbPosition = new Vector2f(0, track.Position.Y);
-        thumbPosition.X = Position.X + ((Value - Min) / (Max - Min)) * Size.X;
+        thumbPosition.X = Position.X + ((Value - Min) / (Max - Min)) * (Size.X-thumb.Size.X);
         thumb.Position = thumbPosition;
         thumb.FillColor = ColorThumb;
         if (IsSelected) thumb.FillColor *= UParameter.OutlineMultiplier;
