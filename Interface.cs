@@ -2,6 +2,7 @@ using System.Net.NetworkInformation;
 using System.Numerics;
 using System.Reflection.Metadata;
 using Microsoft.VisualBasic.FileIO;
+using OpenTK.Graphics.OpenGL;
 using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
@@ -9,6 +10,7 @@ using SFML.Window;
 static class UParameter
 {
     public static Font font1 = new Font(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"Assets", "fonts", "font1.ttf"));
+    public static Color OutlineMultiplier = new Color(200, 200, 200);
     public static bool IsPaused = false;
 
 }
@@ -123,6 +125,95 @@ public class UIButton : IUIElement
     {
         var rect = new RectangleShape(Size);
         return rect.GetGlobalBounds();
+    }
+}
+
+public class UISlider : IUIElement
+{
+    public static readonly Color OnSelectedColor = new Color(230, 230, 230);
+
+    public Vector2f Position { get; set; }
+    public Vector2f Size { get; set; }
+    public Color Color { get; set; }
+    public Color ColorThumb { get; set; }
+    public bool IsVisible { get; set; }
+    public bool IsSelected { get; set; }
+
+    public float Min { get; set; }
+    public float Max { get; set; }
+    public float Value { get; set; }
+    public float Step { get; set; }
+
+    private RectangleShape thumb;
+    private RectangleShape track;
+
+    public UISlider(Vector2f position, Vector2f size, Color color, Color colorThumb, float min, float max, float startValue, float step)
+    {
+        IsVisible = true;
+        IsSelected = false;
+
+        Position = position;
+        Size = size;
+        Color = color;
+        ColorThumb = colorThumb;
+        Min = min;
+        Max = max;
+        Step = step;
+        Value = Math.Clamp(startValue, Min, Max);
+
+        track = new RectangleShape(Size);
+        thumb = new RectangleShape(new Vector2f(Size.X / 7, Size.Y));
+
+        Initialize();
+    }
+
+    private void Initialize()
+    {
+        Vector2f oldPosition = new Vector2f(0, 0);
+
+        UI.Window.MouseMoved += (s, e) =>
+        {
+            var worldPos = UI.Window.MapPixelToCoords(e.Position);
+
+            if (!UI.ButtonLeftPressed)
+                IsSelected = thumb.GetGlobalBounds().Contains(worldPos);
+
+
+            if (IsSelected && UI.ButtonLeftPressed)
+            {
+                float x = thumb.Position.X + worldPos.X - oldPosition.X;
+                x = Math.Clamp(x, track.Position.X, track.Position.X + track.Size.X);
+
+                Value = Min + ((x - track.Position.X) / track.Size.X) * (Max - Min);
+                Value = MathF.Round(Value / Step) * Step;
+            }
+
+            oldPosition = worldPos;
+        };
+    }
+
+    public void Draw(RenderWindow window)
+    {
+        track.Position = Position;
+        track.FillColor = Color;
+        track.OutlineColor = track.FillColor * UParameter.OutlineMultiplier;
+        track.OutlineThickness = 3;
+
+        UITextPanel valueText = new UITextPanel(Position, new Vector2f(1, 1), Color.Black, (uint)(Size.Y / 1.5f), Value.ToString());
+        valueText.Align(track.GetGlobalBounds());
+
+        Vector2f thumbPosition = new Vector2f(0, track.Position.Y);
+        thumbPosition.X = Position.X + ((Value - Min) / (Max - Min)) * Size.X;
+        thumb.Position = thumbPosition;
+        thumb.FillColor = ColorThumb;
+        if (IsSelected) thumb.FillColor *= UParameter.OutlineMultiplier;
+
+        thumb.OutlineColor = thumb.FillColor * UParameter.OutlineMultiplier;
+        thumb.OutlineThickness = 3;
+
+        window.Draw(track);
+        window.Draw(thumb);
+        valueText.Draw(window);
     }
 }
 
@@ -248,9 +339,20 @@ static class UI
     private static List<IUIElement> elements = new List<IUIElement>();
     public static RenderWindow Window => window;
 
+    public static bool ButtonLeftPressed;
+
     public static void Initialize(RenderWindow w)
     {
         window = w;
+
+        window.MouseButtonPressed += (s, e) =>
+        {
+            ButtonLeftPressed = e.Button == Mouse.Button.Left;
+        };
+        window.MouseButtonReleased += (s, e) =>
+        {
+            ButtonLeftPressed = !(e.Button == Mouse.Button.Left);
+        };
     }
 
     public static void AddToList(IUIElement element) => elements.Add(element);
