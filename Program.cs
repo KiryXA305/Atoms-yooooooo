@@ -116,6 +116,9 @@ class Programm
 
         UI.AddToList(stats);
 
+        UISlider sliderSimSpeed = new UISlider(new Vector2f(0,0), new Vector2f(100, 40), UParameter.DefaultPanelColor, UParameter.DefaultMovealbleElement, 1, 50, 1, 1);
+        UI.AddToList(sliderSimSpeed);
+
         float averageKinetic = 1;
         float averageTemperature = 1;
 
@@ -144,9 +147,11 @@ class Programm
 
             float timer = 1;
 
+            Parameters.TimeSpeed = sliderSimSpeed.Value;
+
             if (!Parameters.IsPause)
             {
-                for (int i = 0; i < Const.TimeSpeed; i++)
+                for (int i = 0; i < Parameters.TimeSpeed; i++)
                 {
                     bonds.Update();
                     atoms.Update(Const.Delta);

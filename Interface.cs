@@ -203,7 +203,7 @@ public class UISlider : IUIElement
         track.OutlineColor = track.FillColor * UParameter.OutlineMultiplier;
         track.OutlineThickness = 3;
 
-        UITextPanel valueText = new UITextPanel(Position, new Vector2f(1, 1), Color.Black, (uint)(Size.Y / 1.5f), Value.ToString());
+        UITextPanel valueText = new UITextPanel(Position, new Vector2f(1, 1), Color.White, (uint)(Size.Y / 1.5f), Value.ToString());
         valueText.Align(track.GetGlobalBounds());
 
         Vector2f thumbPosition = new Vector2f(0, track.Position.Y);
