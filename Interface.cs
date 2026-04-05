@@ -285,14 +285,17 @@ public class UITextPanel : IUIElement
     public string Text { get; set; }
 
     public uint CharacterSize { get; set; }
+    public uint Resolution { get; set; }
 
-    public UITextPanel(Vector2f position, Vector2f size, Color color, uint charSize, string text)
+    public UITextPanel(Vector2f position, Vector2f size, Color color, uint charSize, string text, uint res = 4)
     {
+        Resolution = res;
+
         Position = position;
-        Size = size;
+        Size = size / Resolution;
         Color = color;
         IsVisible = true;
-        CharacterSize = charSize;
+        CharacterSize = charSize * Resolution;
         Text = text;
     }
 
@@ -302,7 +305,7 @@ public class UITextPanel : IUIElement
         text.Position = Position;
         text.FillColor = Color;
         text.CharacterSize = CharacterSize;
-        text.Scale = new Vector2f(1, 1);
+        text.Scale = Size;
         text.DisplayedString = Text;
 
         w.Draw(text);
@@ -312,8 +315,8 @@ public class UITextPanel : IUIElement
     {
         Text text = new Text(UParameter.font1);
         text.Position = Position;
-        text.CharacterSize = CharacterSize;
-        text.Scale = Size;
+        text.CharacterSize = CharacterSize / Resolution;
+        text.Scale = Size * Resolution;
         text.DisplayedString = Text;
 
         FloatRect textBounds = text.GetLocalBounds();
@@ -326,13 +329,15 @@ public class UITextPanel : IUIElement
 
     public FloatRect GetLocalBounds()
     {
-        var text = new Text(UParameter.font1, Text, CharacterSize);
+        var text = new Text(UParameter.font1, Text, CharacterSize / Resolution);
+        text.Scale = Size * Resolution;
         return text.GetLocalBounds();
     }
 
     public FloatRect GetGlobalBounds()
     {
-        var text = new Text(UParameter.font1, Text, CharacterSize);
+        var text = new Text(UParameter.font1, Text, CharacterSize / Resolution);
+        text.Scale = Size * Resolution;
         return text.GetGlobalBounds();
     }
 }
